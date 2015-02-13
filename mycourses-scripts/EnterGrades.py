@@ -11,7 +11,7 @@ from selenium import webdriver
 GRADES_FILE = "grades.txt"
 
 
-def main(): #TODO: Add feature to also add feedback/comments
+def main():  # TODO: Add feature to also add feedback/comments
     # open file with grade data.
     grades = get_grades_from_file(GRADES_FILE)
     # given data, enter grades
