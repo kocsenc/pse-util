@@ -80,7 +80,7 @@ def enter_grades_mycourses(grades):
     :return:
     """
     d = webdriver.Firefox()
-    w = WebDriverWait(d, 10) # Waiting mechanism
+    w = WebDriverWait(d, 10)  # Waiting mechanism
 
     d.get("http://www.mycourses.rit.edu")
     input("Please log in and navigate to grade entry page and press Enter")
@@ -104,9 +104,19 @@ def enter_grades_mycourses(grades):
         xpath = FeedbackXpath(i + 5).xpath
         feedback_button = d.find_element_by_xpath(xpath)
         feedback_button.click()
+
         try:
-            # MyCourses still wont recognize this id
-            feedback_area = w.until(EC.presence_of_element_located((By.ID, "tinymce")))
+            # Dealing with iFrame and myCourses Modals
+            feedback_frame = d.find_elements_by_tag_name('iframe')[1]
+            d.switch_to.frame(feedback_frame)
+
+            sub_frames = d.find_elements_by_tag_name('iframe')
+            student_comment_frame = sub_frames[0]
+            instructor_comment_frame = sub_frames[1]
+
+            d.switch_to.frame(student_comment_frame)
+            tbox = w.until(EC.presence_of_element_located((By.ID, "tinymce")))
+            tbox.send_keys()  # TODO: ADD COMMENT HERE PLZ
         finally:
             print("oh oh")
             sys.exit()
