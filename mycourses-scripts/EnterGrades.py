@@ -17,32 +17,39 @@ from selenium.webdriver.support import expected_conditions as EC
 GRADES_FILE = "grades.txt"
 
 
-def main():  # TODO: Add feature to also add feedback/comments
+def main():
     # open file with grade data.
-    grades = get_grades_from_file(GRADES_FILE)
+    entries = get_grades_from_file(GRADES_FILE)
     # given data, enter grades
-    enter_grades_mycourses(grades)
+    enter_grades_mycourses(entries)
 
 
 def get_grades_from_file(filename):
     """
-    Opens file named filename where each line
-    is a grade.
+    Opens file named filename where each line is:
+    grade[\t]feedback
+
+    It is meant to parse direct copy/paste from any spreadsheet.
 
     :param filename:
-    :return: string array (i.e. ["4","6"...]
+    :return: entry array (i.e. [EntryObject1, EntryObject2, ...]
     """
-    # Parses file and returns grades in array in string format
-    grades = []
+    entries = []
     with open(filename) as f:
         lines = f.readlines()
 
     for line in lines:
-        line = line.strip()
-        if is_number(line):
-            grades.append(line)
+        split = line.split('\t')
 
-    return grades
+        grade = split[0]
+        if is_number(grade.strip()):
+            entry = GradeEntry(grade, split[1])
+            entries.append(entry)
+        else:
+            print("Grade not parsed correctly. Make sure to have grades and comments tab delimited")
+            sys.exit()
+
+    return entries
 
 
 def is_number(s):
@@ -68,15 +75,15 @@ def is_number(s):
     return False
 
 
-def enter_grades_mycourses(grades):
+def enter_grades_mycourses(entries):
     """
     Actually opens up a selemium webdriver
     prompts the user to login and navigate to page
     for grades and inputs them.
-    User must submit manually before final input which closes
-    the browser.
+    User must submit manually before final input prompt.
+    Final input prompt closes the browser.
     Driver closes at the end
-    :param grades:
+    :param entries:
     :return:
     """
     d = webdriver.Firefox()
@@ -88,25 +95,33 @@ def enter_grades_mycourses(grades):
     grade_textboxes = d.find_element_by_id("z_p").find_elements_by_class_name("d_edt")
 
     # check if textbox size == grade size
-    if len(grade_textboxes) != len(grades):
+    if len(grade_textboxes) != len(entries):
         d.close()
         sys.exit()
 
-    # Enter Grades
     for i in range(len(grade_textboxes)):
+        # ############
+        # Enter Grades
+        # ############
         textbox = grade_textboxes[i]
-        grade = grades[i]
+        grade = entries[i].grade
         textbox.send_keys(grade)
         time.sleep(0.3)
 
-    # Enter feedback
-    for i in range(len(grade_textboxes)):
-        xpath = FeedbackXpath(i + 5).xpath
-        feedback_button = d.find_element_by_xpath(xpath)
+        # ############
+        # Enter feedback
+        # ############
+        xpath = FeedbackXpath(i + 4).xpath
+        feedback_button = w.until(EC.presence_of_element_located((By.XPATH, xpath)))
         feedback_button.click()
 
         try:
             # Dealing with iFrame and myCourses Modals
+            # Must switch to modal frame and then comment subframe.
+            # Submit button is in default_content frame.
+            w.until(EC.visibility_of_element_located(
+                (By.XPATH, '//*[@id="d2l_body"]/div[9]/div/div[1]/table/tbody/tr/td[1]/a[1]')))
+            w.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="d2l_form"]')))
             feedback_frame = d.find_elements_by_tag_name('iframe')[1]
             d.switch_to.frame(feedback_frame)
 
@@ -116,9 +131,15 @@ def enter_grades_mycourses(grades):
 
             d.switch_to.frame(student_comment_frame)
             tbox = w.until(EC.presence_of_element_located((By.ID, "tinymce")))
-            tbox.send_keys()  # TODO: ADD COMMENT HERE PLZ
-        finally:
-            print("oh oh")
+            tbox.send_keys(entries[i].feedback)
+            d.switch_to.default_content()
+            submit_btn = d.find_element_by_xpath('//*[@id="d2l_body"]/div[9]/div/div[1]/table/tbody/tr/td[1]/a[1]')
+            submit_btn.click()
+
+        except Exception as e:
+            print("Error while trying to add comments, exiting...")
+            print("No grades were submitted or altered.")
+            print(e)
             sys.exit()
 
     input("Grades should be inputted, revise and submit")
@@ -126,11 +147,25 @@ def enter_grades_mycourses(grades):
 
 
 class FeedbackXpath:
+    """
+    Class to build an xpath for a feedback button
+    """
+
     def __init__(self, elm):
         self.elm = str(elm)
         self.part_one = '//*[@id="z_p"]/tbody/tr['
         self.part_two = ']/td[6]/a'
         self.xpath = self.part_one + self.elm + self.part_two
+
+
+class GradeEntry:
+    """
+    Simple Generic Grade entry, has a grade and feedback
+    """
+
+    def __init__(self, grade, feedback):
+        self.grade = str(grade).strip()
+        self.feedback = str(feedback).strip()
 
 
 if __name__ == "__main__":
