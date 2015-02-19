@@ -1,20 +1,28 @@
-import time
-
+#!/usr/bin/env python3
 __author__ = 'kocsen'
 
 """
 Given a list of grades in order, will insert them into
-mycourses Grade Entry page.
+MyCourses Grade Entry page.
 """
-from selenium import webdriver
 import sys
+import time
 
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-GRADES_FILE = "grades.txt"
+# ########
+# Check arguments
+# ########
+arguments = sys.argv
+if len(arguments) < 2:
+    print("Usage: \n./enterGrades.py grade_file.txt")
+    sys.exit()
+else:
+    GRADES_FILE = arguments[1]
 
 
 def main():
@@ -96,6 +104,9 @@ def enter_grades_mycourses(entries):
 
     # check if textbox size == grade size
     if len(grade_textboxes) != len(entries):
+        print("Double check your grades. It seems the list of grades is not matched with the amount of entries.")
+        print("Size of grades: " + str(len(entries)))
+        print("Size of entries on MyCourses: " + str(len(grade_textboxes)))
         d.close()
         sys.exit()
 
