@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require 'thor'
+require 'gradehelp'
+
+begin
+  GradeHelp.start()
+rescue Interrupt
+  puts ""
+end

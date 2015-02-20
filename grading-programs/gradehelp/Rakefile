@@ -1,0 +1,9 @@
+task default: [:build, :install]
+
+task :build do
+  system "gem build gradehelp.gemspec"
+end
+
+task :install do
+  system "gem install *.gem"
+end
