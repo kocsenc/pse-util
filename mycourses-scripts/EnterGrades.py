@@ -142,6 +142,7 @@ def enter_grades_mycourses(entries):
 
             d.switch_to.frame(student_comment_frame)
             tbox = w.until(EC.presence_of_element_located((By.ID, "tinymce")))
+            tbox.clear()
             tbox.send_keys(entries[i].feedback)
             d.switch_to.default_content()
             submit_btn = d.find_element_by_xpath('//*[@id="d2l_body"]/div[9]/div/div[1]/table/tbody/tr/td[1]/a[1]')
