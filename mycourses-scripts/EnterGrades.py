@@ -116,6 +116,7 @@ def enter_grades_mycourses(entries):
         # ############
         textbox = grade_textboxes[i]
         grade = entries[i].grade
+        textbox.clear()
         textbox.send_keys(grade)
         time.sleep(0.3)
 
