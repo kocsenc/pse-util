@@ -50,12 +50,18 @@ def get_grades_from_file(filename):
         split = line.split('\t')
 
         grade = split[0]
-        if is_number(grade.strip()):
-            entry = GradeEntry(grade, split[1])
-            entries.append(entry)
-        else:
+        if not is_number(grade.strip()):
             print("Grade not parsed correctly. Make sure to have grades and comments tab delimited")
             sys.exit()
+
+        feedback = ""
+        if len(split) >= 2:
+            feedback = split[1]
+        else:
+            feedback = ""
+            
+        entry = GradeEntry(grade, feedback)
+        entries.append(entry)
 
     return entries
 
